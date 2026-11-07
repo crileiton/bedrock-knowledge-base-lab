@@ -12,3 +12,8 @@ output "vector_index" {
   description = "Índice vectorial donde Bedrock escribe los embeddings."
   value       = aws_s3vectors_index.kb.index_name
 }
+
+output "kb_role_name" {
+  description = "Rol IAM que asume Bedrock para la Knowledge Base."
+  value       = aws_iam_role.kb.name
+}
