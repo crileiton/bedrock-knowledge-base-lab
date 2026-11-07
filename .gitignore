@@ -1,0 +1,38 @@
+# --- Terraform ---
+# El estado contiene IDs de cuenta, ARNs y a veces secretos: nunca se sube.
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+
+# Variables locales (pueden contener datos de tu cuenta). Solo se sube el .example
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# --- Credenciales y entornos ---
+.env
+.env.*
+*.pem
+*.key
+.aws/
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- Sistema / editores ---
+.DS_Store
+.idea/
+.vscode/
