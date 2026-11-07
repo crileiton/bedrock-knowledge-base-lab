@@ -17,3 +17,14 @@ output "kb_role_name" {
   description = "Rol IAM que asume Bedrock para la Knowledge Base."
   value       = aws_iam_role.kb.name
 }
+
+# Los scripts de scripts/ leen estos dos valores con `terraform output -raw`.
+output "knowledge_base_id" {
+  description = "ID de la Knowledge Base."
+  value       = aws_bedrockagent_knowledge_base.kb.id
+}
+
+output "data_source_id" {
+  description = "ID del data source S3."
+  value       = aws_bedrockagent_data_source.s3.data_source_id
+}
