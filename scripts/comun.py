@@ -6,7 +6,7 @@ from pathlib import Path
 import boto3
 
 TERRAFORM_DIR = Path(__file__).resolve().parent.parent / "terraform"
-PERFIL_POR_DEFECTO = "lab"
+PERFIL_POR_DEFECTO = "real"
 REGION_POR_DEFECTO = "us-east-2"
 
 

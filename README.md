@@ -24,9 +24,10 @@ Toda la infraestructura se crea con Terraform. Las consultas a la KB se hacen co
 ## Requisitos
 
 - Terraform >= 1.9
-- AWS CLI v2 con un perfil configurado. El perfil está fijo como `lab` en `terraform/providers.tf`; cámbialo por el tuyo
+- AWS CLI v2 con un perfil configurado. El perfil está fijo como `real` en `terraform/providers.tf` y en `scripts/comun.py`; cámbialo por el tuyo
 - Python 3.10+ con `boto3` reciente
 - Bedrock disponible en la región (por defecto `us-east-2`)
+- **Cuota de inferencia** en la cuenta para el modelo de embeddings y el modelo generativo. Revísala en Service Quotas (servicio `bedrock`): si es 0, la ingesta falla con `429 Too many requests` aunque los permisos de IAM estén bien
 
 ## Estructura
 
