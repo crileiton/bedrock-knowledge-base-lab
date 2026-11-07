@@ -24,7 +24,7 @@ Toda la infraestructura se crea con Terraform. Las consultas a la KB se hacen co
 ## Requisitos
 
 - Terraform >= 1.9
-- AWS CLI v2 con un perfil configurado (por defecto `lab`)
+- AWS CLI v2 con un perfil configurado. El perfil está fijo como `lab` en `terraform/providers.tf`; cámbialo por el tuyo
 - Python 3.10+ con `boto3` reciente
 - Bedrock disponible en la región (por defecto `us-east-2`)
 

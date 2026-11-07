@@ -1,0 +1,7 @@
+# Copia este archivo como terraform.tfvars y ajústalo a tu entorno.
+# terraform.tfvars está en .gitignore y no se sube al repositorio.
+
+region       = "us-east-2"
+project_name = "kb-lab"
+
+# El perfil de AWS CLI está fijo en providers.tf (no es variable).
