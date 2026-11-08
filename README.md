@@ -13,6 +13,8 @@ Se construyen con Terraform **dos Knowledge Bases sobre los mismos documentos** 
 
 📊 **Resultados, tiempos y conclusiones:** [`docs/RESULTADOS.md`](docs/RESULTADOS.md)
 
+🧒 **Todo el laboratorio explicado de forma sencilla, con ejemplos de la vida diaria:** [`docs/EXPLICACION-SENCILLA.md`](docs/EXPLICACION-SENCILLA.md)
+
 ## Hallazgos principales
 
 | | KB vectorial | Managed KB |
@@ -63,6 +65,7 @@ En preguntas simples, la KB vectorial es más rápida e igual de precisa. En pre
 | [`scripts/`](scripts) | `ingest.py` (ingesta), `query.py` (consultas), `pruebas.py` (batería de pruebas) |
 | [`resultados/pruebas.json`](resultados/pruebas.json) | Resultados crudos de la batería de pruebas |
 | [`docs/RESULTADOS.md`](docs/RESULTADOS.md) | Pruebas, respuestas, tiempos, comparación y conclusiones |
+| [`docs/EXPLICACION-SENCILLA.md`](docs/EXPLICACION-SENCILLA.md) | El laboratorio completo explicado sin tecnicismos |
 
 Los documentos son **ficticios a propósito**: si el modelo responde con esos datos, la respuesta salió de la KB y no de su entrenamiento.
 
