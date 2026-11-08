@@ -53,7 +53,7 @@ resource "aws_bedrockagent_data_source" "s3" {
     type = "S3"
 
     s3_configuration {
-      bucket_arn              = aws_s3_bucket.docs.arn
+      bucket_arn              = module.docs.arn
       bucket_owner_account_id = local.account_id
       inclusion_prefixes      = ["documentos/"]
     }

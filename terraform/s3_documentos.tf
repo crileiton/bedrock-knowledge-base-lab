@@ -1,90 +1,48 @@
 # ---------------------------------------------------------------------------
-# Data source de la Knowledge Base: bucket S3 con los documentos originales.
+# Data source de la KB vectorial: bucket S3 con los documentos originales.
 # ---------------------------------------------------------------------------
 
-resource "aws_s3_bucket" "docs" {
-  bucket = "${local.name}-docs"
+module "docs" {
+  source = "./modules/bucket_documentos"
 
-  # Es un laboratorio: permite que `terraform destroy` borre el bucket con objetos.
-  force_destroy = true
+  bucket_name = "${local.name}-docs"
+  source_dir  = "${path.module}/../docs-fuente"
 }
 
-resource "aws_s3_bucket_public_access_block" "docs" {
-  bucket = aws_s3_bucket.docs.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+# Los recursos se crearon antes de existir el módulo. Los bloques `moved`
+# le dicen a Terraform que son los mismos objetos con otra dirección, para
+# que los mueva en el estado en vez de destruirlos y crearlos de nuevo.
+moved {
+  from = aws_s3_bucket.docs
+  to   = module.docs.aws_s3_bucket.this
 }
 
-resource "aws_s3_bucket_ownership_controls" "docs" {
-  bucket = aws_s3_bucket.docs.id
-
-  rule {
-    object_ownership = "BucketOwnerEnforced"
-  }
+moved {
+  from = aws_s3_bucket_public_access_block.docs
+  to   = module.docs.aws_s3_bucket_public_access_block.this
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "docs" {
-  bucket = aws_s3_bucket.docs.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
+moved {
+  from = aws_s3_bucket_ownership_controls.docs
+  to   = module.docs.aws_s3_bucket_ownership_controls.this
 }
 
-resource "aws_s3_bucket_versioning" "docs" {
-  bucket = aws_s3_bucket.docs.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
+moved {
+  from = aws_s3_bucket_server_side_encryption_configuration.docs
+  to   = module.docs.aws_s3_bucket_server_side_encryption_configuration.this
 }
 
-# Rechaza cualquier petición que no use HTTPS.
-data "aws_iam_policy_document" "docs_tls_only" {
-  statement {
-    sid     = "DenyInsecureTransport"
-    effect  = "Deny"
-    actions = ["s3:*"]
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    resources = [
-      aws_s3_bucket.docs.arn,
-      "${aws_s3_bucket.docs.arn}/*",
-    ]
-
-    condition {
-      test     = "Bool"
-      variable = "aws:SecureTransport"
-      values   = ["false"]
-    }
-  }
+moved {
+  from = aws_s3_bucket_versioning.docs
+  to   = module.docs.aws_s3_bucket_versioning.this
 }
 
-resource "aws_s3_bucket_policy" "docs" {
-  bucket = aws_s3_bucket.docs.id
-  policy = data.aws_iam_policy_document.docs_tls_only.json
-
-  depends_on = [aws_s3_bucket_public_access_block.docs]
+moved {
+  from = aws_s3_bucket_policy.docs
+  to   = module.docs.aws_s3_bucket_policy.this
 }
 
-# Sube cada documento (y su archivo .metadata.json) de docs-fuente/.
-# El etag hace que Terraform vuelva a subir el archivo si cambia su contenido.
-resource "aws_s3_object" "docs" {
-  for_each = fileset("${path.module}/../docs-fuente", "**")
-
-  bucket = aws_s3_bucket.docs.id
-  key    = "documentos/${each.value}"
-  source = "${path.module}/../docs-fuente/${each.value}"
-  etag   = filemd5("${path.module}/../docs-fuente/${each.value}")
-
-  content_type = endswith(each.value, ".json") ? "application/json" : "text/markdown"
+moved {
+  from = aws_s3_object.docs
+  to   = module.docs.aws_s3_object.this
 }

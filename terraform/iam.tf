@@ -54,7 +54,7 @@ data "aws_iam_policy_document" "kb_permissions" {
     sid       = "ListDocsBucket"
     effect    = "Allow"
     actions   = ["s3:ListBucket"]
-    resources = [aws_s3_bucket.docs.arn]
+    resources = [module.docs.arn]
 
     condition {
       test     = "StringEquals"
@@ -67,7 +67,7 @@ data "aws_iam_policy_document" "kb_permissions" {
     sid       = "ReadDocsObjects"
     effect    = "Allow"
     actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.docs.arn}/documentos/*"]
+    resources = ["${module.docs.arn}/documentos/*"]
 
     condition {
       test     = "StringEquals"
