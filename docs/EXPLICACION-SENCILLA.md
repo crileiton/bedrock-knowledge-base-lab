@@ -1,4 +1,4 @@
-# El laboratorio explicado como si tuvieras 10 años
+# Amazon Bedrock Knowledge Bases explicado de forma sencilla
 
 Este documento cuenta todo el laboratorio con ejemplos de la vida diaria, sin palabras técnicas. Cuando aparece una palabra técnica, va entre paréntesis, para que puedas relacionar la idea con el nombre real.
 

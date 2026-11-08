@@ -13,7 +13,7 @@ Se construyen con Terraform **dos Knowledge Bases sobre los mismos documentos** 
 
 📊 **Resultados, tiempos y conclusiones:** [`docs/RESULTADOS.md`](docs/RESULTADOS.md)
 
-🧒 **Todo el laboratorio explicado de forma sencilla, con ejemplos de la vida diaria:** [`docs/EXPLICACION-SENCILLA.md`](docs/EXPLICACION-SENCILLA.md)
+💡 **Todo el laboratorio explicado de forma sencilla, con ejemplos de la vida diaria:** [`docs/EXPLICACION-SENCILLA.md`](docs/EXPLICACION-SENCILLA.md)
 
 ## Hallazgos principales
 
