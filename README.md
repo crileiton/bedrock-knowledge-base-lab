@@ -37,6 +37,45 @@ Toda la infraestructura se crea con Terraform. Las consultas a la KB se hacen co
 | `docs-fuente/` | Documentos ficticios que se ingieren en la KB |
 | `scripts/` | Ingesta y consultas a la KB |
 
+## Uso
+
+```bash
+# 1. Infraestructura
+cd terraform
+terraform init
+terraform apply
+cd ..
+
+# 2. Entorno de Python
+python3 -m venv .venv
+.venv/bin/pip install -r scripts/requirements.txt
+
+# 3. Ingesta (repetir cada vez que cambien los documentos)
+.venv/bin/python scripts/ingest.py
+
+# 4. Consultas
+.venv/bin/python scripts/query.py retrieve "¿Cuántos días tengo para devolver un café?"
+.venv/bin/python scripts/query.py generate "¿Cuánto cuesta el plan anual?"
+.venv/bin/python scripts/query.py generate "¿Cuánto dura el secado honey?" --categoria produccion
+
+# 5. Limpieza
+cd terraform && terraform destroy
+```
+
+## Conceptos clave para el examen
+
+| Concepto | Qué se ve en este laboratorio |
+|---|---|
+| Data source | Bedrock lee los documentos de S3, no los copia; cambios en S3 requieren una nueva ingesta |
+| Chunking | Tamaño fijo de 300 tokens con 20 % de solapamiento; no se puede cambiar sin recrear el data source |
+| Embeddings | Titan Text Embeddings V2 a 1024 dimensiones; la dimensión debe coincidir con la del índice |
+| Vector store | S3 Vectors con distancia coseno; el texto del chunk va en metadatos no filtrables |
+| Rol de servicio | Trust policy con `aws:SourceAccount` y `aws:SourceArn` (confused deputy) |
+| `Retrieve` | Devuelve los K chunks más parecidos con su score, aunque no sean relevantes |
+| `RetrieveAndGenerate` | Pasa los chunks a un LLM y devuelve una respuesta con citas; si no hay contexto útil, se niega a responder |
+| Filtrado por metadatos | `.metadata.json` junto a cada documento; el filtro se aplica antes de la búsqueda semántica |
+| Cuotas | Con cuota 0 de inferencia, la ingesta falla con `429` aunque IAM esté bien |
+
 ## Seguridad
 
 - No hay IDs de cuenta, ARNs ni credenciales en el código: se obtienen en tiempo de ejecución.
