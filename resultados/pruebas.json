@@ -1,0 +1,341 @@
+{
+  "fecha_utc": "2026-11-08T02:34:12+00:00",
+  "repeticiones_por_caso": 3,
+  "modelo_generativo_kb_vectorial": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "kbs": {
+    "vectorial": {
+      "region": "us-east-2",
+      "ingestas": [
+        {
+          "estado": "COMPLETE",
+          "inicio_utc": "2026-11-08T00:09:52+00:00",
+          "duracion_s": 4.9,
+          "escaneados": 3,
+          "nuevos": 3,
+          "modificados": 0,
+          "eliminados": 0,
+          "fallidos": 0
+        },
+        {
+          "estado": "COMPLETE",
+          "inicio_utc": "2026-11-08T02:32:43+00:00",
+          "duracion_s": 0.6,
+          "escaneados": 3,
+          "nuevos": 0,
+          "modificados": 0,
+          "eliminados": 0,
+          "fallidos": 0
+        }
+      ]
+    },
+    "managed": {
+      "region": "us-east-1",
+      "ingestas": [
+        {
+          "estado": "COMPLETE",
+          "inicio_utc": "2026-11-08T00:21:07+00:00",
+          "duracion_s": 152.2,
+          "escaneados": 3,
+          "nuevos": 3,
+          "modificados": 0,
+          "eliminados": 0,
+          "fallidos": 0
+        },
+        {
+          "estado": "COMPLETE",
+          "inicio_utc": "2026-11-08T02:32:57+00:00",
+          "duracion_s": 61.6,
+          "escaneados": 3,
+          "nuevos": 0,
+          "modificados": 0,
+          "eliminados": 0,
+          "fallidos": 0
+        }
+      ]
+    }
+  },
+  "casos": [
+    {
+      "id": "P1",
+      "titulo": "Recuperación de un dato puntual",
+      "modo": "retrieve",
+      "pregunta": "¿Cuántos días tengo para devolver un café y qué condiciones debe cumplir?",
+      "vectorial": {
+        "api": "Retrieve",
+        "chunks": [
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.737,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "**sin abrir** y con la válvula desgasificadora intacta. - Si el producto llegó dañado, el cliente debe enviar una foto al correo de soporte en las primeras **48"
+          },
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.731,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "# Política de envíos y devoluciones — Cooperativa Cafetera Nubes Altas > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. ## Env"
+          },
+          {
+            "documento": "ficha-tecnica-procesos.md",
+            "score": 0.656,
+            "categoria": "produccion",
+            "inicio_texto": "Lavado con agua recirculada. 5. Secado en marquesina hasta alcanzar **11 % de humedad**. ## Proceso honey - Se conserva entre el **40 % y el 60 %** del mucílago"
+          }
+        ],
+        "latencias_s": [
+          1.09,
+          0.49,
+          0.38
+        ],
+        "latencia_mediana_s": 0.49
+      },
+      "managed": {
+        "api": "Retrieve",
+        "chunks": [
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.472,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "## Devoluciones - Se aceptan devoluciones dentro de los **10 días calendario** siguientes a la entrega. - El café debe estar **sin abrir** y con la válvula desg"
+          },
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.388,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "# Política de envíos y devoluciones — Cooperativa Cafetera Nubes Altas > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. ## Env"
+          },
+          {
+            "documento": "faq-suscripcion.md",
+            "score": 0.209,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "# Preguntas frecuentes — Suscripción \"Taza Mensual\" > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. ## ¿Qué incluye la suscri"
+          }
+        ],
+        "latencias_s": [
+          1.15,
+          0.56,
+          0.58
+        ],
+        "latencia_mediana_s": 0.58
+      }
+    },
+    {
+      "id": "P2",
+      "titulo": "Respuesta generada con citas",
+      "modo": "respuesta",
+      "pregunta": "¿Cuántos días tengo para devolver un café y qué condiciones debe cumplir?",
+      "vectorial": {
+        "api": "RetrieveAndGenerate",
+        "respuesta": "Tienes 10 días calendario desde la entrega para devolver un café. El café debe cumplir las siguientes condiciones: estar sin abrir y tener la válvula desgasificadora intacta. La excepción es si el producto llegó dañado, en cuyo caso debes enviar una foto al correo de soporte dentro de las primeras 48 horas y la cooperativa cubre el costo de reenvío. Ten en cuenta que los cafés de la línea \"Microlote Reserva\" no admiten devoluciones excepto por daño en el transporte, ya que se tuestan bajo pedido.",
+        "documentos_citados": [
+          "politica-envios-devoluciones.md"
+        ],
+        "latencias_s": [
+          1.99,
+          2.14,
+          2.0
+        ],
+        "latencia_mediana_s": 2.0
+      },
+      "managed": {
+        "api": "AgenticRetrieveStream",
+        "respuesta": "Tienes **10 días calendario** desde la entrega para devolver un café.\n\nPara que la devolución sea válida, el producto debe cumplir estas condiciones:\n\n- El café debe estar **sin abrir**, con la **válvula desgasificadora intacta**.\n- Si el producto llegó **dañado**, debes enviar una foto al correo de soporte dentro de las primeras **48 horas**; en ese caso la cooperativa cubre el costo de reenvío.\n- Los reembolsos se procesan en un plazo máximo de **7 días hábiles**, devueltos al mismo medio de pago utilizado en la compra.\n\n**Excepción importante**: los cafés de la línea **\"Microlote Reserva\"** no admiten devoluciones, salvo que el daño se haya producido durante el transporte, ya que estos cafés se tuestan bajo pedido.",
+        "pasos_agente": [
+          "SpeculativeRetrieval: Speculative retrieval completed successfully",
+          "Planning: Agent planning completed"
+        ],
+        "documentos_citados": [
+          "politica-envios-devoluciones.md"
+        ],
+        "latencias_s": [
+          5.41,
+          5.24,
+          6.1
+        ],
+        "latencia_mediana_s": 5.41
+      }
+    },
+    {
+      "id": "P3",
+      "titulo": "Filtro por metadatos que excluye la respuesta",
+      "modo": "retrieve",
+      "pregunta": "¿Cuántos días dura el secado del proceso honey?",
+      "categoria": "atencion-cliente",
+      "vectorial": {
+        "api": "Retrieve",
+        "chunks": [
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.574,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "# Política de envíos y devoluciones — Cooperativa Cafetera Nubes Altas > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. ## Env"
+          },
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.552,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "**sin abrir** y con la válvula desgasificadora intacta. - Si el producto llegó dañado, el cliente debe enviar una foto al correo de soporte en las primeras **48"
+          },
+          {
+            "documento": "faq-suscripcion.md",
+            "score": 0.536,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "Por defecto se envía en **grano entero**. ## ¿Qué pasa si no estoy en casa al momento de la entrega? La transportadora hace **dos intentos de entrega**. Si ambo"
+          }
+        ],
+        "latencias_s": [
+          0.49,
+          0.39,
+          0.5
+        ],
+        "latencia_mediana_s": 0.49
+      },
+      "managed": {
+        "api": "Retrieve",
+        "chunks": [
+          {
+            "documento": "politica-envios-devoluciones.md",
+            "score": 0.448,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "## Devoluciones - Se aceptan devoluciones dentro de los **10 días calendario** siguientes a la entrega. - El café debe estar **sin abrir** y con la válvula desg"
+          },
+          {
+            "documento": "faq-suscripcion.md",
+            "score": 0.236,
+            "categoria": "atencion-cliente",
+            "inicio_texto": "# Preguntas frecuentes — Suscripción \"Taza Mensual\" > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. ## ¿Qué incluye la suscri"
+          }
+        ],
+        "latencias_s": [
+          0.53,
+          0.54,
+          0.53
+        ],
+        "latencia_mediana_s": 0.53
+      }
+    },
+    {
+      "id": "P4",
+      "titulo": "Filtro por metadatos que incluye la respuesta",
+      "modo": "retrieve",
+      "pregunta": "¿Cuántos días dura el secado del proceso honey?",
+      "categoria": "produccion",
+      "vectorial": {
+        "api": "Retrieve",
+        "chunks": [
+          {
+            "documento": "ficha-tecnica-procesos.md",
+            "score": 0.779,
+            "categoria": "produccion",
+            "inicio_texto": "Lavado con agua recirculada. 5. Secado en marquesina hasta alcanzar **11 % de humedad**. ## Proceso honey - Se conserva entre el **40 % y el 60 %** del mucílago"
+          },
+          {
+            "documento": "ficha-tecnica-procesos.md",
+            "score": 0.587,
+            "categoria": "produccion",
+            "inicio_texto": "# Ficha técnica de procesos de beneficio — Cooperativa Cafetera Nubes Altas > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. #"
+          }
+        ],
+        "latencias_s": [
+          0.55,
+          0.41,
+          0.37
+        ],
+        "latencia_mediana_s": 0.41
+      },
+      "managed": {
+        "api": "Retrieve",
+        "chunks": [
+          {
+            "documento": "ficha-tecnica-procesos.md",
+            "score": 0.35,
+            "categoria": "produccion",
+            "inicio_texto": "# Ficha técnica de procesos de beneficio — Cooperativa Cafetera Nubes Altas > Documento ficticio creado para un laboratorio de Amazon Bedrock Knowledge Bases. #"
+          }
+        ],
+        "latencias_s": [
+          0.55,
+          0.56,
+          0.55
+        ],
+        "latencia_mediana_s": 0.55
+      }
+    },
+    {
+      "id": "P5",
+      "titulo": "Pregunta multi-hop (requiere tres documentos)",
+      "modo": "respuesta",
+      "pregunta": "Quiero el café que se hace con proceso honey pero en suscripción anual. ¿Cuánto pagaría, qué recibo de regalo y puedo devolverlo si no me gusta?",
+      "vectorial": {
+        "api": "RetrieveAndGenerate",
+        "respuesta": "El plan de suscripción anual cuesta 920.000 COP e incluye un molino manual de regalo. Respecto a las devoluciones, se aceptan dentro de 10 días calendario después de la entrega, siempre que el café esté sin abrir y con la válvula desgasificadora intacta. Sin embargo, la política de devoluciones no especifica si aplica para casos de \"no me gusta\" o solo para productos dañados. Nota: Los search results no especifican si la suscripción \"Taza Mensual\" permite elegir específicamente el proceso honey. Solo indican que puedes elegir el tipo de molienda, pero no el método de procesamiento del café.",
+        "documentos_citados": [
+          "faq-suscripcion.md",
+          "politica-envios-devoluciones.md"
+        ],
+        "latencias_s": [
+          2.65,
+          2.68,
+          2.66
+        ],
+        "latencia_mediana_s": 2.66
+      },
+      "managed": {
+        "api": "AgenticRetrieveStream",
+        "respuesta": "Aquí tienes la información sobre lo que preguntas:\n\n## Precio y regalo del plan anual\n\n- El plan anual de la suscripción \"Taza Mensual\" cuesta **920.000 COP** y, al suscribirte, recibes de regalo un **molino manual**.\n- Cada mes, además, recibes **dos bolsas de 340 g** de cafés diferentes, una tarjeta de cata con notas sensoriales y una receta de preparación sugerida.\n\n## Sobre el café de proceso honey\n\nEl café elaborado con proceso honey corresponde a la línea **\"Microlote Reserva\"** de la Cooperativa Cafetera Nubes Altas. En este proceso se conserva entre el **40% y el 60%** del mucílago de la cereza, y el secado dura entre **18 y 22 días** en camas africanas.\n\n## ¿Puedo devolverlo si no me gusta?\n\nAquí está el punto importante: **los cafés de la línea \"Microlote Reserva\" (que es donde está el café honey) no admiten devoluciones**, salvo que el producto haya llegado dañado durante el transporte, ya que se tuestan bajo pedido.\n\nPara otros cafés que no sean de esa línea, la política general sí permite devoluciones dentro de los **10 días calendario** siguientes a la entrega, siempre que el café esté sin abrir y con la válvula desgasificadora intacta. Si llega dañado, debes enviar una foto a soporte dentro de las primeras **48 horas** y la cooperativa cubre el reenvío; los reembolsos se procesan en máximo **7 días hábiles**.\n\n## Resumen\n\n| Aspecto | Detalle |\n|---|---|\n| Precio plan anual | 920.000 COP |\n| Regalo incluido | Molino manual |\n| Café honey | Línea \"Microlote Reserva\" |\n| ¿Admite devolución? | **No**, salvo daño comprobado en el transporte (se tuesta bajo pedido) |\n\nSi tu interés es poder devolver el café libremente, ten en cuenta que al elegir específicamente el proceso honey (Microlote Reserva) renuncias a esa flexibilidad, excepto en caso de daño en el envío.",
+        "pasos_agente": [
+          "SpeculativeRetrieval: Speculative retrieval completed successfully",
+          "Planning: Agent planning completed"
+        ],
+        "documentos_citados": [
+          "faq-suscripcion.md",
+          "ficha-tecnica-procesos.md",
+          "politica-envios-devoluciones.md"
+        ],
+        "latencias_s": [
+          11.68,
+          10.02,
+          10.87
+        ],
+        "latencia_mediana_s": 10.87
+      }
+    },
+    {
+      "id": "P6",
+      "titulo": "Pregunta fuera del alcance de los documentos",
+      "modo": "respuesta",
+      "pregunta": "¿Tienen tienda física en Medellín y cuál es su horario de atención?",
+      "vectorial": {
+        "api": "RetrieveAndGenerate",
+        "respuesta": "No encontré información en los documentos disponibles sobre si la Cooperativa Cafetera Nubes Altas tiene una tienda física en Medellín o cuál sería su horario de atención. Los documentos que tengo acceso contienen información sobre procesos de beneficio del café y políticas de envíos y devoluciones, pero no incluyen detalles sobre ubicaciones físicas o horarios de atención.",
+        "documentos_citados": [],
+        "latencias_s": [
+          1.9,
+          1.58,
+          1.68
+        ],
+        "latencia_mediana_s": 1.68
+      },
+      "managed": {
+        "api": "AgenticRetrieveStream",
+        "respuesta": "No encontré información en la base de conocimiento sobre una tienda física en Medellín ni sobre horarios de atención al público de la Cooperativa Cafetera Nubes Altas. Los documentos disponibles solo cubren temas de envíos, devoluciones, procesos de beneficio del café y la suscripción \"Taza Mensual\", pero no mencionan puntos de venta físicos ni horarios de atención. Si necesitas esa información, te recomiendo contactar directamente a la cooperativa por sus canales de atención al cliente.",
+        "pasos_agente": [
+          "SpeculativeRetrieval: Speculative retrieval completed successfully",
+          "Planning: Agent planning completed",
+          "Retrieval: Retrieval completed successfully",
+          "Planning: Agent planning completed"
+        ],
+        "documentos_citados": [
+          "faq-suscripcion.md",
+          "politica-envios-devoluciones.md"
+        ],
+        "latencias_s": [
+          6.35,
+          7.31,
+          7.61
+        ],
+        "latencia_mediana_s": 7.31
+      }
+    }
+  ]
+}

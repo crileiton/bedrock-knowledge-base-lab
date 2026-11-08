@@ -1,47 +1,83 @@
-# Laboratorio: Amazon Bedrock Knowledge Bases con Terraform
+# Laboratorio: Amazon Bedrock Knowledge Bases — KB vectorial vs Managed KB
 
-Laboratorio práctico para entender **Amazon Bedrock Knowledge Bases (KB)** como preparación para la certificación **AWS Certified Generative AI Developer – Professional**.
+Laboratorio práctico de **Amazon Bedrock Knowledge Bases**, hecho como preparación para la certificación **AWS Certified Generative AI Developer – Professional**.
 
-Toda la infraestructura se crea con Terraform. Las consultas a la KB se hacen con scripts de Python (boto3).
+Se construyen con Terraform **dos Knowledge Bases sobre los mismos documentos** y se comparan con una batería de pruebas reproducible:
+
+| | KB vectorial (customer-managed) | Managed KB |
+|---|---|---|
+| Qué controlas | Vector store, embeddings, chunking | Solo la fuente de datos |
+| Vector store | Amazon S3 Vectors | Administrado por Bedrock |
+| Respuestas | `RetrieveAndGenerate` | `AgenticRetrieveStream` (recuperación agéntica) |
+| Región usada | `us-east-2` | `us-east-1` |
+
+📊 **Resultados, tiempos y conclusiones:** [`docs/RESULTADOS.md`](docs/RESULTADOS.md)
+
+## Hallazgos principales
+
+| | KB vectorial | Managed KB |
+|---|---|---|
+| Ingesta inicial (3 documentos) | 4,9 s | 152,2 s |
+| `Retrieve` (mediana) | 0,49 s | 0,58 s |
+| Respuesta simple (mediana) | 2,00 s | 5,41 s |
+| Pregunta que cruza 3 documentos | ❌ Respuesta incorrecta (2,7 s) | ✅ Respuesta correcta (10,9 s) |
+| Pregunta fuera de alcance | ✅ No inventa | ✅ No inventa |
+
+En preguntas simples, la KB vectorial es más rápida e igual de precisa. En preguntas que requieren encadenar información de varios documentos, la recuperación agéntica de la Managed KB fue la única que respondió bien. El detalle está en [`docs/RESULTADOS.md`](docs/RESULTADOS.md).
 
 ## Arquitectura
 
 ```
- docs-fuente/*.md ──► S3 (bucket de documentos)
-                          │
-                          ▼  Ingestion job
-                 ┌──────────────────────────┐
-                 │  Bedrock Knowledge Base  │  1. Parsing
-                 │  (tipo VECTOR)           │  2. Chunking
-                 │                          │  3. Embeddings (Titan Text v2)
-                 └────────────┬─────────────┘
-                              ▼
-                 S3 Vectors (vector bucket + índice)
-                              ▲
-   Retrieve / RetrieveAndGenerate (bedrock-agent-runtime)
+                       docs-fuente/*.md (+ .metadata.json)
+                                     │
+                ┌────────────────────┴────────────────────┐
+                ▼                                         ▼
+    S3 docs bucket (us-east-2)                S3 docs bucket (us-east-1)
+                │ data source S3                          │ conector S3 administrado
+                ▼                                         ▼
+  ┌───────────────────────────────┐        ┌───────────────────────────────┐
+  │ KB vectorial (tipo VECTOR)    │        │ Managed KB (tipo MANAGED)     │
+  │ - Chunking fijo 300 tok / 20% │        │ - Parsing multimodal          │
+  │ - Titan Text Embeddings V2    │        │ - Chunking por estructura     │
+  │   (1024 dims)                 │        │ - Embeddings y re-ranker      │
+  └───────────────┬───────────────┘        │   administrados               │
+                  ▼                        │ - Almacén administrado        │
+  S3 Vectors (vector bucket + índice)      └───────────────┬───────────────┘
+                  ▲                                        ▲
+  Retrieve / RetrieveAndGenerate             Retrieve / AgenticRetrieveStream
+  (Claude Haiku 4.5)                         (modelos administrados)
 ```
 
-## Requisitos
-
-- Terraform >= 1.9
-- AWS CLI v2 con un perfil configurado. El perfil está fijo como `real` en `terraform/providers.tf` y en `scripts/comun.py`; cámbialo por el tuyo
-- Python 3.10+ con `boto3` reciente
-- Bedrock disponible en la región (por defecto `us-east-2`)
-- **Cuota de inferencia** en la cuenta para el modelo de embeddings y el modelo generativo. Revísala en Service Quotas (servicio `bedrock`): si es 0, la ingesta falla con `429 Too many requests` aunque los permisos de IAM estén bien
-
-## Estructura
+## Estructura del repositorio
 
 | Ruta | Contenido |
 |---|---|
-| `terraform/` | Infraestructura (S3, S3 Vectors, IAM, KB vectorial en `us-east-2` y Managed KB en `us-east-1`) |
-| `terraform/modules/bucket_documentos/` | Bucket S3 seguro reutilizable, uno por región |
-| `docs-fuente/` | Documentos ficticios que se ingieren en la KB |
-| `scripts/` | Ingesta y consultas a la KB |
+| [`terraform/`](terraform) | Toda la infraestructura |
+| ├─ `s3_documentos.tf` | Bucket de documentos de la KB vectorial |
+| ├─ `s3_vectors.tf` | Vector bucket e índice de S3 Vectors |
+| ├─ `iam.tf` | Rol de servicio de la KB vectorial |
+| ├─ `knowledge_base.tf` | KB vectorial y su data source (chunking) |
+| ├─ `managed_kb.tf` | Managed KB: bucket, rol, KB y conector |
+| └─ `modules/bucket_documentos/` | Bucket S3 seguro reutilizable (uno por región) |
+| [`docs-fuente/`](docs-fuente) | 3 documentos ficticios de una cooperativa cafetera, cada uno con su `.metadata.json` |
+| [`scripts/`](scripts) | `ingest.py` (ingesta), `query.py` (consultas), `pruebas.py` (batería de pruebas) |
+| [`resultados/pruebas.json`](resultados/pruebas.json) | Resultados crudos de la batería de pruebas |
+| [`docs/RESULTADOS.md`](docs/RESULTADOS.md) | Pruebas, respuestas, tiempos, comparación y conclusiones |
 
-## Uso
+Los documentos son **ficticios a propósito**: si el modelo responde con esos datos, la respuesta salió de la KB y no de su entrenamiento.
+
+## Requisitos
+
+- Terraform >= 1.9 y AWS provider >= 6.72 (versión con soporte para S3 Vectors y Managed KB)
+- AWS CLI v2 con un perfil configurado. El perfil está fijo como `real` en [`terraform/providers.tf`](terraform/providers.tf) y en [`scripts/comun.py`](scripts/comun.py); **cámbialo por el tuyo**. Va fijo y no como variable para que nadie apunte a otra cuenta por accidente desde un `tfvars`
+- Python 3.10+
+- **Cuota de inferencia en Bedrock** para Titan Text Embeddings V2 y Claude Haiku 4.5. Revísala en Service Quotas (servicio `bedrock`): si es 0, la ingesta falla con `429` aunque IAM esté bien
+- Regiones: `us-east-2` para la KB vectorial y una región con Managed KB (por defecto `us-east-1`)
+
+## Cómo reproducir el laboratorio
 
 ```bash
-# 1. Infraestructura
+# 1. Infraestructura (35 recursos en dos regiones)
 cd terraform
 terraform init
 terraform apply
@@ -55,51 +91,49 @@ python3 -m venv .venv
 .venv/bin/python scripts/ingest.py --kb vectorial
 .venv/bin/python scripts/ingest.py --kb managed
 
-# 4. Consultas
+# 4. Consultas manuales
 .venv/bin/python scripts/query.py retrieve "¿Cuántos días tengo para devolver un café?"
 .venv/bin/python scripts/query.py generate "¿Cuánto cuesta el plan anual?"
 .venv/bin/python scripts/query.py generate "¿Cuánto dura el secado honey?" --categoria produccion
 .venv/bin/python scripts/query.py retrieve "¿Cuántos días tengo para devolver un café?" --kb managed
 .venv/bin/python scripts/query.py agentic "¿Cuánto cuesta el plan anual con café honey y puedo devolverlo?" --kb managed
 
-# 5. Limpieza
+# 5. Batería de pruebas completa (escribe resultados/pruebas.json)
+.venv/bin/python scripts/pruebas.py --repeticiones 3
+
+# 6. Limpieza: elimina todo en las dos regiones
 cd terraform && terraform destroy
 ```
 
-## Conceptos clave para el examen
+### Costo
+
+Con 3 documentos y unas decenas de consultas, el costo total es de centavos de dólar. Nada cobra por estar encendido sin uso:
+- S3 y S3 Vectors cobran por almacenamiento y peticiones.
+- Titan y Claude cobran por token.
+- La Managed KB cobra por almacenamiento y por llamada de recuperación.
+
+Aun así, **ejecuta `terraform destroy` al terminar**.
+
+## Conceptos para el examen
 
 | Concepto | Qué se ve en este laboratorio |
 |---|---|
-| Data source | Bedrock lee los documentos de S3, no los copia; cambios en S3 requieren una nueva ingesta |
-| Chunking | Tamaño fijo de 300 tokens con 20 % de solapamiento; no se puede cambiar sin recrear el data source |
-| Embeddings | Titan Text Embeddings V2 a 1024 dimensiones; la dimensión debe coincidir con la del índice |
-| Vector store | S3 Vectors con distancia coseno; el texto del chunk va en metadatos no filtrables |
-| Rol de servicio | Trust policy con `aws:SourceAccount` y `aws:SourceArn` (confused deputy) |
-| `Retrieve` | Devuelve los K chunks más parecidos con su score, aunque no sean relevantes |
-| `RetrieveAndGenerate` | Pasa los chunks a un LLM y devuelve una respuesta con citas; si no hay contexto útil, se niega a responder |
-| Filtrado por metadatos | `.metadata.json` junto a cada documento; el filtro se aplica antes de la búsqueda semántica |
+| Data source | Bedrock **lee** los documentos de S3, no los copia; los cambios en S3 requieren una nueva ingesta, que es incremental |
+| Chunking | Tamaño fijo de 300 tokens con 20 % de solapamiento; **no se puede cambiar** sin recrear el data source. El chunking por estructura de la Managed KB conserva las secciones completas |
+| Embeddings | Titan Text Embeddings V2 a 1024 dimensiones; la dimensión debe coincidir con la del índice y no se puede cambiar |
+| Vector store | S3 Vectors con distancia coseno; el texto del chunk va en metadatos **no filtrables** por el límite de 2 KB |
+| Rol de servicio | Trust policy con `aws:SourceAccount` y `aws:SourceArn` (protección contra *confused deputy*); en la Managed KB el rol solo lee la fuente |
+| `Retrieve` | En la KB vectorial devuelve siempre K resultados; con re-ranking, la Managed KB descarta los poco relevantes |
+| `RetrieveAndGenerate` | Una búsqueda, un LLM y citas. No disponible en la Managed KB |
+| `AgenticRetrieveStream` | Planificar → recuperar → evaluar → repetir. Resuelve preguntas multi-hop a cambio de más latencia |
+| Filtrado por metadatos | `.metadata.json` junto a cada documento; el filtro se aplica **antes** de la búsqueda, por eso sirve como control de acceso por documento |
+| Grounding | Ante preguntas fuera de alcance, las dos KB dicen que no tienen la información en vez de inventar |
 | Cuotas | Con cuota 0 de inferencia, la ingesta falla con `429` aunque IAM esté bien |
-
-## KB vectorial vs Managed KB
-
-El laboratorio crea las dos con los mismos documentos para compararlas.
-
-| | KB vectorial (`VECTOR`) | Managed KB (`MANAGED`) |
-|---|---|---|
-| Vector store | Lo eliges y lo creas tú (aquí, S3 Vectors) | Lo administra Bedrock |
-| Embeddings | Eliges el modelo y las dimensiones | Modelo administrado sin costo extra (o uno propio de 1024 dims) |
-| Chunking | Lo configuras tú y no se puede cambiar | Automático y consciente de la estructura (respeta secciones) |
-| Permisos del rol | Modelo de embeddings + S3 + vector store | Solo leer la fuente |
-| Data source | `s3_configuration` | Conector administrado (`MANAGED_KNOWLEDGE_BASE_CONNECTOR`) |
-| Configuración de búsqueda | `vectorSearchConfiguration` | `managedSearchConfiguration` (con re-ranking) |
-| `RetrieveAndGenerate` | Sí | **No**: se usa `AgenticRetrieveStream` |
-| Recuperación agéntica (multi-hop) | No | Sí |
-| Regiones | Casi todas | Solo algunas (no `us-east-2`) |
-| Ingesta de 3 documentos | ~10 s | ~2,5 min (parsing multimodal) |
+| Regiones | La Managed KB solo está en algunas regiones, y el bucket debe estar en la misma región que la KB |
 
 ## Seguridad
 
-- No hay IDs de cuenta, ARNs ni credenciales en el código: se obtienen en tiempo de ejecución.
-- El estado de Terraform (`*.tfstate`) y los `*.tfvars` están en `.gitignore`.
-- Los buckets bloquean el acceso público, cifran en reposo y exigen TLS.
-- El rol de la KB sigue el principio de mínimo privilegio y tiene protección contra *confused deputy*.
+- Ni el código ni los resultados contienen IDs de cuenta, ARNs, IDs de recursos ni credenciales: se obtienen en tiempo de ejecución.
+- El estado de Terraform (`*.tfstate`), los `*.tfvars` y los entornos locales están en `.gitignore`.
+- Los buckets bloquean el acceso público, cifran en reposo, guardan versiones y rechazan peticiones sin TLS.
+- Los roles siguen el principio de mínimo privilegio (validados con IAM Access Analyzer) y tienen protección contra *confused deputy*.
