@@ -32,3 +32,9 @@ variable "embedding_dimensions" {
     error_message = "Titan Text Embeddings V2 solo admite 256, 512 o 1024 dimensiones."
   }
 }
+
+variable "managed_kb_region" {
+  description = "Región de la Managed KB. Debe ser una región donde exista el servicio (p. ej. us-east-1 o us-west-2)."
+  type        = string
+  default     = "us-east-1"
+}

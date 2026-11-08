@@ -5,3 +5,6 @@ region       = "us-east-2"
 project_name = "kb-lab"
 
 # El perfil de AWS CLI está fijo en providers.tf (no es variable).
+
+# La Managed KB solo existe en algunas regiones (no en us-east-2).
+managed_kb_region = "us-east-1"

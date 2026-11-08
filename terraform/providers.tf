@@ -14,3 +14,19 @@ provider "aws" {
     }
   }
 }
+
+# Segundo provider para la Managed KB, que no está disponible en todas las
+# regiones. Los recursos lo eligen con `provider = aws.managed_kb`.
+provider "aws" {
+  alias   = "managed_kb"
+  region  = var.managed_kb_region
+  profile = "real"
+
+  default_tags {
+    tags = {
+      Project   = var.project_name
+      ManagedBy = "terraform"
+      Purpose   = "lab-certificacion-genai"
+    }
+  }
+}

@@ -5,7 +5,7 @@ Se ejecuta cada vez que cambian los documentos del data source: Bedrock
 procesa solo lo nuevo, lo modificado y lo eliminado (sincronización incremental).
 
 Uso:
-    python scripts/ingest.py [--perfil lab] [--region us-east-2]
+    python scripts/ingest.py [--kb vectorial|managed] [--perfil real] [--region us-east-2]
 """
 
 import argparse
@@ -14,13 +14,27 @@ import time
 
 from botocore.exceptions import ClientError
 
-from comun import PERFIL_POR_DEFECTO, REGION_POR_DEFECTO, sesion, terraform_output
+from comun import PERFIL_POR_DEFECTO, REGION_POR_DEFECTO, datos_kb, sesion
 
 ESTADOS_FINALES = {"COMPLETE", "FAILED", "STOPPED"}
 
 
+def esperar_data_source(cliente, kb_id: str, ds_id: str, intervalo: int = 10) -> None:
+    """En una Managed KB el data source se crea de forma asíncrona: hay que
+    esperar a que esté AVAILABLE antes de sincronizar."""
+    while True:
+        estado = cliente.get_data_source(knowledgeBaseId=kb_id, dataSourceId=ds_id)["dataSource"]["status"]
+        if estado == "AVAILABLE":
+            return
+        if estado in {"DELETE_UNSUCCESSFUL", "FAILED"}:
+            raise RuntimeError(f"El data source está en estado {estado}")
+        print(f"  data source: {estado}, esperando...")
+        time.sleep(intervalo)
+
+
 def ejecutar_ingesta(cliente, kb_id: str, ds_id: str, intervalo: int = 10) -> dict:
     """Inicia la ingesta y consulta su estado hasta que llegue a un estado final."""
+    esperar_data_source(cliente, kb_id, ds_id, intervalo)
     job = cliente.start_ingestion_job(knowledgeBaseId=kb_id, dataSourceId=ds_id)["ingestionJob"]
     job_id = job["ingestionJobId"]
     print(f"Ingestion job iniciado: {job_id}")
@@ -37,17 +51,18 @@ def ejecutar_ingesta(cliente, kb_id: str, ds_id: str, intervalo: int = 10) -> di
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--kb", choices=["vectorial", "managed"], default="vectorial")
     parser.add_argument("--perfil", default=PERFIL_POR_DEFECTO)
-    parser.add_argument("--region", default=REGION_POR_DEFECTO)
+    parser.add_argument("--region", default=REGION_POR_DEFECTO, help="Región de la KB vectorial.")
     args = parser.parse_args()
 
-    kb_id = terraform_output("knowledge_base_id")
-    ds_id = terraform_output("data_source_id")
-    cliente = sesion(args.perfil, args.region).client("bedrock-agent")
+    kb_id, ds_id, region = datos_kb(args.kb, args.region)
+    print(f"KB {args.kb}: {kb_id} ({region})")
+    cliente = sesion(args.perfil, region).client("bedrock-agent")
 
     try:
         job = ejecutar_ingesta(cliente, kb_id, ds_id)
-    except ClientError as e:
+    except (ClientError, RuntimeError) as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
 

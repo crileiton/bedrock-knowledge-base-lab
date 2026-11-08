@@ -33,7 +33,8 @@ Toda la infraestructura se crea con Terraform. Las consultas a la KB se hacen co
 
 | Ruta | Contenido |
 |---|---|
-| `terraform/` | Infraestructura (S3, S3 Vectors, IAM, Knowledge Base) |
+| `terraform/` | Infraestructura (S3, S3 Vectors, IAM, KB vectorial en `us-east-2` y Managed KB en `us-east-1`) |
+| `terraform/modules/bucket_documentos/` | Bucket S3 seguro reutilizable, uno por región |
 | `docs-fuente/` | Documentos ficticios que se ingieren en la KB |
 | `scripts/` | Ingesta y consultas a la KB |
 
@@ -51,12 +52,15 @@ python3 -m venv .venv
 .venv/bin/pip install -r scripts/requirements.txt
 
 # 3. Ingesta (repetir cada vez que cambien los documentos)
-.venv/bin/python scripts/ingest.py
+.venv/bin/python scripts/ingest.py --kb vectorial
+.venv/bin/python scripts/ingest.py --kb managed
 
 # 4. Consultas
 .venv/bin/python scripts/query.py retrieve "¿Cuántos días tengo para devolver un café?"
 .venv/bin/python scripts/query.py generate "¿Cuánto cuesta el plan anual?"
 .venv/bin/python scripts/query.py generate "¿Cuánto dura el secado honey?" --categoria produccion
+.venv/bin/python scripts/query.py retrieve "¿Cuántos días tengo para devolver un café?" --kb managed
+.venv/bin/python scripts/query.py agentic "¿Cuánto cuesta el plan anual con café honey y puedo devolverlo?" --kb managed
 
 # 5. Limpieza
 cd terraform && terraform destroy
@@ -75,6 +79,23 @@ cd terraform && terraform destroy
 | `RetrieveAndGenerate` | Pasa los chunks a un LLM y devuelve una respuesta con citas; si no hay contexto útil, se niega a responder |
 | Filtrado por metadatos | `.metadata.json` junto a cada documento; el filtro se aplica antes de la búsqueda semántica |
 | Cuotas | Con cuota 0 de inferencia, la ingesta falla con `429` aunque IAM esté bien |
+
+## KB vectorial vs Managed KB
+
+El laboratorio crea las dos con los mismos documentos para compararlas.
+
+| | KB vectorial (`VECTOR`) | Managed KB (`MANAGED`) |
+|---|---|---|
+| Vector store | Lo eliges y lo creas tú (aquí, S3 Vectors) | Lo administra Bedrock |
+| Embeddings | Eliges el modelo y las dimensiones | Modelo administrado sin costo extra (o uno propio de 1024 dims) |
+| Chunking | Lo configuras tú y no se puede cambiar | Automático y consciente de la estructura (respeta secciones) |
+| Permisos del rol | Modelo de embeddings + S3 + vector store | Solo leer la fuente |
+| Data source | `s3_configuration` | Conector administrado (`MANAGED_KNOWLEDGE_BASE_CONNECTOR`) |
+| Configuración de búsqueda | `vectorSearchConfiguration` | `managedSearchConfiguration` (con re-ranking) |
+| `RetrieveAndGenerate` | Sí | **No**: se usa `AgenticRetrieveStream` |
+| Recuperación agéntica (multi-hop) | No | Sí |
+| Regiones | Casi todas | Solo algunas (no `us-east-2`) |
+| Ingesta de 3 documentos | ~10 s | ~2,5 min (parsing multimodal) |
 
 ## Seguridad
 

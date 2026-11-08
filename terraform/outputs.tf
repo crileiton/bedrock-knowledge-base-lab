@@ -28,3 +28,18 @@ output "data_source_id" {
   description = "ID del data source S3."
   value       = aws_bedrockagent_data_source.s3.data_source_id
 }
+
+output "managed_kb_region" {
+  description = "Región de la Managed KB."
+  value       = var.managed_kb_region
+}
+
+output "managed_knowledge_base_id" {
+  description = "ID de la Managed KB."
+  value       = aws_bedrockagent_knowledge_base.managed.id
+}
+
+output "managed_data_source_id" {
+  description = "ID del data source de la Managed KB."
+  value       = aws_bedrockagent_data_source.managed_s3.data_source_id
+}
